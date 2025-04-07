@@ -13,9 +13,6 @@ class Trie():
             current = current[letter]
         current[self.end_symbol] = True
     
-    def get_dict(self):
-        return self.root
-
     def generate_from_words(self, word_list):
         for word in word_list:
             self.add(word)
