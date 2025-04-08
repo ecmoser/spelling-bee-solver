@@ -1,15 +1,22 @@
 from scrape import scrape_sbsolver, scrape_full_dict
 from trie import Trie, save_trie, load_trie, get_trie_words
 from prettyify import matches_string
+from playwright.sync_api import sync_playwright
+import os
 
 def update_used_words():
     used_trie = Trie()
     with open("dicts/used_words.txt", "w") as f:
-        for letter in "abcdefghijklmnopqrstuvwxyz":
-            url = f"https://sbsolver.com/lexicon/{letter}"
-            for word in scrape_sbsolver(url):
-                f.write(word.lower() + "\n")
-                used_trie.add(word.lower())
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            page = browser.new_page()
+            for letter in "abcdefghijklmnopqrstuvwxyz":
+                url = f"https://sbsolver.com/lexicon/{letter}"
+                words = scrape_sbsolver(url, page)
+                print(words)
+                for word in words:
+                    f.write(word.lower() + "\n")
+                    used_trie.add(word.lower())
         f.close()
     save_trie(used_trie, "dicts/used_words_trie.pkl")
 
@@ -25,6 +32,12 @@ def update_full_dictionary():
     save_trie(full_trie, "dicts/full_dictionary_trie.pkl")
 
 def solve_puzzle(puzzle):
+    if not os.path.isfile("dicts/used_words_trie.pkl"):
+        print("Used words trie not found. Please update used words.")
+        return
+    if not os.path.isfile("dicts/full_dictionary_trie.pkl"):
+        print("Full dictionary trie not found. Please update full dictionary.")
+        return
     used_trie = load_trie("dicts/used_words_trie.pkl")
     full_trie = load_trie("dicts/full_dictionary_trie.pkl")
     letters = [letter.lower() for letter in puzzle]
@@ -78,14 +91,21 @@ def main():
                         caps += 1
             solve_puzzle(puzzle)
         elif choice == "u":
-            choice = input("Update used words(u) or full dictionary(f)? ").lower()
-            while choice != "u" and choice != "f":
-                choice = input("Please enter 'u' to update used words or 'f' for full dictionary: ").lower()
+            choice = input("Update used words(u) or full dictionary(f) or both(b)? ").lower()
+            while choice != "u" and choice != "f" and choice != "b":
+                choice = input("Please enter 'u' to update used words or 'f' for full dictionary or 'b' for both: ").lower()
             if choice == "u":
                 print("This will take a while...")
                 update_used_words()
+                print("Done!")
             elif choice == "f":
                 update_full_dictionary()
+                print("Done!")
+            elif choice == "b":
+                print("This will take a while...")
+                update_used_words()
+                update_full_dictionary()
+                print("Done!")
         elif choice == "q":
             print("Quitting!")
             return
