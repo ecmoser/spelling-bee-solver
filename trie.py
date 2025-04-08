@@ -22,4 +22,15 @@ def save_trie(trie, file_path):
         pickle.dump(trie, f)
 
 def load_trie(file_path):
-    return pickle.load(file_path)
+    with open(file_path, "rb") as f:
+        return pickle.load(f)
+
+def get_trie_words(trie_dict, letters, prefix=""):
+    words = []
+    if trie_dict is None:
+        return words
+    if "*" in trie_dict.keys():
+        words.append(prefix)
+    for letter in letters:
+        words += get_trie_words(trie_dict.get(letter), letters, prefix + letter)
+    return words

@@ -35,7 +35,7 @@ def solve_puzzle(puzzle):
     used_word_matches = []
     full_word_matches = []
     pangrams = []
-    for word in get_trie_words(used_trie, letters):
+    for word in get_trie_words(used_trie.root, letters):
         if center_letter in word:
             all_letters = True
             for letter in letters:
@@ -45,16 +45,17 @@ def solve_puzzle(puzzle):
                 pangrams.append(word)
             else:
                 used_word_matches.append(word)
-    for word in get_trie_words(full_trie, letters):
+    for word in get_trie_words(full_trie.root, letters):
         if center_letter in word:
-            all_letters = True
-            for letter in letters:
-                if letter not in word:
-                    all_letters = False
-            if all_letters:
-                pangrams.append(word)
-            else:
-                full_word_matches.append(word)
+            if not word in used_word_matches and not word in pangrams:
+                all_letters = True
+                for letter in letters:
+                    if letter not in word:
+                        all_letters = False
+                if all_letters:
+                    pangrams.append(word)
+                else:
+                    full_word_matches.append(word)
     return matches_string(used_word_matches, full_word_matches, pangrams)
                 
 
@@ -75,6 +76,7 @@ def main():
                 for letter in puzzle:
                     if letter.isupper():
                         caps += 1
+            solve_puzzle(puzzle)
         elif choice == "u":
             choice = input("Update used words(u) or full dictionary(f)? ").lower()
             while choice != "u" and choice != "f":
