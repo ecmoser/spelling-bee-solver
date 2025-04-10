@@ -11,9 +11,9 @@ def update_used_words():
             browser = p.chromium.launch(headless=True)
             page = browser.new_page()
             for letter in "abcdefghijklmnopqrstuvwxyz":
+                print(f"Getting words starting with: {letter}")
                 url = f"https://sbsolver.com/lexicon/{letter}"
                 words = scrape_sbsolver(url, page)
-                print(words)
                 for word in words:
                     f.write(word.lower() + "\n")
                     used_trie.add(word.lower())
