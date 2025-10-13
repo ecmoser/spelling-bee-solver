@@ -1,5 +1,5 @@
 # Solver for the NYT Spelling Bee
----
+
 ## What is this project?
 
 ### The Game
