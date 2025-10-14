@@ -18,9 +18,10 @@ If you are unfamiliar with how to use git, go somewhere else and learn before co
 1. Clone this repo into a local directory on your pc and open a command prompt in that directory.
 2. Create a virtual environment by running `python3 -m venv venv`. If you dont have pytyhon3 installed, install it as well as the python3.12-venv package before doing this.
 3. Activate the virtual environment by running `.\venv\bin\activate` on windows or `source venv/bin/activate` on Mac or Unix.
-4. Once in the virtual environment, install dependencies using `pip install -r requirements.txt`
-5. To run the program, run `python3 main.py` in the virtual environment.
-6. (Optional) When done using the script, run `deactivate` to stop the virtual environment
+4. Once in the virtual environment, install dependencies using `pip install -r requirements.txt`.
+5. Run `playwright install`  and then `playwright install-deps` to install browsers for playwright. This is what is used for scraping online databases.
+6. To run the program, run `python3 main.py` in the virtual environment.
+7. (Optional) When done using the script, run `deactivate` to stop the virtual environment
 
 ### Program Usage
 1. On the first time running the program or any subsequent time which you would like to update the word list, enter "u" for update and then "b" for both to update both the list of previously used words and the list of all words in the English dictionary. This will take a while, so be patient. On future uses, you also have the option to update each of the lists individually or skip this step entirely.
