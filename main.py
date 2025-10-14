@@ -73,6 +73,8 @@ def solve_puzzle(puzzle):
                 
 
 def main():
+    if not os.path.exists("dicts"):
+        os.mkdir("dicts")
     while True:
         choice = input("What would like to do? Solve(s)/Update words(u)/Quit(q) ").lower()
         while choice != "s" and choice != "u" and choice != "q" and choice != "test":
