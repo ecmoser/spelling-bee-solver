@@ -28,3 +28,7 @@ If you are unfamiliar with how to use git, go somewhere else and learn before co
 2. Enter "s" to solve a puzzle, then enter the puzzle you would like solved. It must be a string of 7 letters with only 1 capitalized, the capitalized letter being the center letter in the puzzle that must be used in all words. (Ex. aeFrtsi)
 3. View your solved puzzle.
 4. If you would like to solve another puzzle, repeat step 2. Otherwise, enter "q" to quit the program.
+
+## Future Improvements
+- **Basic GUI:** Add a user interface to make the program more usable by casual users. (IN PROGRESS)
+- **Faster Fetching:** Improve speed at which program retrieves dictionaries.
