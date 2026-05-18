@@ -1,8 +1,9 @@
-from scrape import scrape_sbsolver, scrape_full_dict
+from scrape import scrape_site, scrape_full_dict
 from trie import Trie, save_trie, load_trie, get_trie_words
 from prettyify import matches_string
 from playwright.sync_api import sync_playwright
 import os
+
 
 def update_used_words():
     used_trie = Trie()
@@ -10,15 +11,14 @@ def update_used_words():
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
             page = browser.new_page()
-            for letter in "abcdefghijklmnopqrstuvwxyz":
-                print(f"Getting words starting with: {letter}")
-                url = f"https://sbsolver.com/lexicon/{letter}"
-                words = scrape_sbsolver(url, page)
-                for word in words:
-                    f.write(word.lower() + "\n")
-                    used_trie.add(word.lower())
+            url = "https://ultrabee.org/list/word-first-desc-full.html"
+            words = scrape_site(url, page)
+            for word in words:
+                f.write(word.lower() + "\n")
+                used_trie.add(word.lower())
         f.close()
     save_trie(used_trie, "dicts/used_words_trie.pkl")
+
 
 def update_full_dictionary():
     full_trie = Trie()
@@ -31,6 +31,7 @@ def update_full_dictionary():
         f.close()
     save_trie(full_trie, "dicts/full_dictionary_trie.pkl")
 
+
 def solve_puzzle(puzzle):
     if not os.path.isfile("dicts/used_words_trie.pkl"):
         print("Used words trie not found. Please update used words.")
@@ -41,7 +42,7 @@ def solve_puzzle(puzzle):
     used_trie = load_trie("dicts/used_words_trie.pkl")
     full_trie = load_trie("dicts/full_dictionary_trie.pkl")
     letters = [letter.lower() for letter in puzzle]
-    center_letter = ''
+    center_letter = ""
     for letter in puzzle:
         if letter.isupper():
             center_letter = letter.lower()
@@ -70,15 +71,19 @@ def solve_puzzle(puzzle):
                 else:
                     full_word_matches.append(word)
     return matches_string(used_word_matches, full_word_matches, pangrams)
-                
+
 
 def main():
     if not os.path.exists("dicts"):
         os.mkdir("dicts")
     while True:
-        choice = input("What would like to do? Solve(s)/Update words(u)/Quit(q) ").lower()
+        choice = input(
+            "What would like to do? Solve(s)/Update words(u)/Quit(q) "
+        ).lower()
         while choice != "s" and choice != "u" and choice != "q" and choice != "test":
-            choice = input("Please enter 's' to solve or 'u' to update words, or 'q' to quit: ").lower()
+            choice = input(
+                "Please enter 's' to solve or 'u' to update words, or 'q' to quit: "
+            ).lower()
         if choice == "s":
             puzzle = input("Enter the puzzle with the center letter capitalized: ")
             caps = 0
@@ -93,9 +98,13 @@ def main():
                         caps += 1
             solve_puzzle(puzzle)
         elif choice == "u":
-            choice = input("Update used words(u) or full dictionary(f) or both(b)? ").lower()
+            choice = input(
+                "Update used words(u) or full dictionary(f) or both(b)? "
+            ).lower()
             while choice != "u" and choice != "f" and choice != "b":
-                choice = input("Please enter 'u' to update used words or 'f' for full dictionary or 'b' for both: ").lower()
+                choice = input(
+                    "Please enter 'u' to update used words or 'f' for full dictionary or 'b' for both: "
+                ).lower()
             if choice == "u":
                 print("This will take a while...")
                 update_used_words()
@@ -114,5 +123,6 @@ def main():
         elif choice == "test":
             print(len("previously used words"))
             print(matches_string(["a", "b", "c"], ["d", "e"], ["g", "h", "i"]))
+
 
 main()
