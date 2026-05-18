@@ -1,8 +1,11 @@
 import pickle
 
 class Trie():
-    def __init__(self, root={}):
-        self.root = root 
+    def __init__(self, root=None):
+        if root is None:
+            self.root = {}
+        else:
+            self.root = root 
         self.end_symbol = "*"
 
     def add(self, word):
