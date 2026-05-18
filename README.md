@@ -20,15 +20,19 @@ If you are unfamiliar with how to use git, go somewhere else and learn before co
 3. Activate the virtual environment by running `.\venv\bin\activate` on windows or `source venv/bin/activate` on Mac or Unix.
 4. Once in the virtual environment, install dependencies using `pip install -r requirements.txt`.
 5. Run `playwright install`  and then `playwright install-deps` to install browsers for playwright. This is what is used for scraping online databases.
-6. To run the program, run `python3 main.py` in the virtual environment.
+6. To run the program, run `python3 main.py` in the virtual environment without the ui. Run `python gui.py` to run the program with the ui.
 7. (Optional) When done using the script, run `deactivate` to stop the virtual environment
 
 ### Program Usage
+#### No UI
 1. On the first time running the program or any subsequent time which you would like to update the word list, enter "u" for update and then "b" for both to update both the list of previously used words and the list of all words in the English dictionary. This will take a while, so be patient. On future uses, you also have the option to update each of the lists individually or skip this step entirely.
 2. Enter "s" to solve a puzzle, then enter the puzzle you would like solved. It must be a string of 7 letters with only 1 capitalized, the capitalized letter being the center letter in the puzzle that must be used in all words. (Ex. aeFrtsi)
 3. View your solved puzzle.
 4. If you would like to solve another puzzle, repeat step 2. Otherwise, enter "q" to quit the program.
+#### With UI
+1. Click the "Update Used" and "Update Full Dict" buttons if it is your first time or you would like to refresh your stored dictionaries
+2. Click on each cell and enter a letter for that sell.
+3. Hit solve and view your answers!
 
-## Future Improvements
-- **Basic GUI:** Add a user interface to make the program more usable by casual users. (IN PROGRESS)
-- **Faster Fetching:** Improve speed at which program retrieves dictionaries.
+## Credits
+The used words list is taken from [UltraBee](https://ultrabee.org). The development of the UI was made with a lot of assistance from the Gemini CLI.
