@@ -34,11 +34,10 @@ def update_full_dictionary():
 
 def solve_puzzle(puzzle):
     if not os.path.isfile("dicts/used_words_trie.pkl"):
-        print("Used words trie not found. Please update used words.")
-        return
+        return None, None, None, "Used words trie not found. Please update used words."
     if not os.path.isfile("dicts/full_dictionary_trie.pkl"):
-        print("Full dictionary trie not found. Please update full dictionary.")
-        return
+        return None, None, None, "Full dictionary trie not found. Please update full dictionary."
+    
     used_trie = load_trie("dicts/used_words_trie.pkl")
     full_trie = load_trie("dicts/full_dictionary_trie.pkl")
     letters = [letter.lower() for letter in puzzle]
@@ -46,9 +45,11 @@ def solve_puzzle(puzzle):
     for letter in puzzle:
         if letter.isupper():
             center_letter = letter.lower()
+            
     used_word_matches = []
     full_word_matches = []
     pangrams = []
+    
     for word in get_trie_words(used_trie.root, letters):
         if center_letter in word:
             all_letters = True
@@ -59,6 +60,7 @@ def solve_puzzle(puzzle):
                 pangrams.append(word)
             else:
                 used_word_matches.append(word)
+                
     for word in get_trie_words(full_trie.root, letters):
         if center_letter in word:
             if not word in used_word_matches and not word in pangrams:
@@ -70,7 +72,9 @@ def solve_puzzle(puzzle):
                     pangrams.append(word)
                 else:
                     full_word_matches.append(word)
-    return matches_string(used_word_matches, full_word_matches, pangrams)
+                    
+    formatted = matches_string(used_word_matches, full_word_matches, pangrams)
+    return used_word_matches, full_word_matches, pangrams, formatted
 
 
 def main():
@@ -125,4 +129,5 @@ def main():
             print(matches_string(["a", "b", "c"], ["d", "e"], ["g", "h", "i"]))
 
 
-main()
+if __name__ == "__main__":
+    main()
