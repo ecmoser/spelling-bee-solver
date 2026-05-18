@@ -13,10 +13,12 @@ GRAY = (220, 220, 220)
 DARK_GRAY = (169, 169, 169)
 HEX_RADIUS = 60
 
+# Simplistic but elegant font choice with Linux fallbacks
+MAIN_FONT = ["Verdana", "DejaVu Sans", "Liberation Sans", "Arial"]
+
 def get_hexagon_points(center, radius):
     points = []
     for i in range(6):
-        # Flat top: vertices at 0, 60, 120, 180, 240, 300 degrees
         angle_deg = 60 * i
         angle_rad = math.pi / 180 * angle_deg
         points.append((center[0] + radius * math.cos(angle_rad),
@@ -74,11 +76,11 @@ def draw_word_pill(surface, x, y, word, font, is_pangram=False):
 def render_section(surface, title, words, font, y, width, is_pangram=False):
     title_surf = font.render(title, True, BLACK)
     surface.blit(title_surf, (10, y))
-    y += 30
+    y += 35
     
     curr_x = 10
     row_h = 0
-    pill_font = pygame.font.SysFont("Arial", 16)
+    pill_font = pygame.font.SysFont(MAIN_FONT, 14)
     for word in words:
         pill_w = pill_font.size(word)[0] + 20
         if curr_x + pill_w > width - 10:
@@ -93,69 +95,89 @@ def render_section(surface, title, words, font, y, width, is_pangram=False):
     return y + row_h + 20
 
 def render_results(screen, used, full, pangrams, font, x, y, width, height, scroll_y):
-    # Draw background and border
     pygame.draw.rect(screen, WHITE, (x, y, width, height))
     pygame.draw.rect(screen, GRAY, (x, y, width, height), 1)
     
-    # Large virtual surface for scrolling
     virt_surface = pygame.Surface((width - 20, 5000))
     virt_surface.fill(WHITE)
     
     curr_y = 10
-    header_font = pygame.font.SysFont("Arial", 20, bold=True)
+    header_font = pygame.font.SysFont(MAIN_FONT, 18, bold=True)
     
     if pangrams:
-        curr_y = render_section(virt_surface, f"Pangrams ({len(pangrams)})", pangrams, header_font, curr_y, width - 20, True)
+        curr_y = render_section(virt_surface, f"PANGRAMS ({len(pangrams)})", pangrams, header_font, curr_y, width - 20, True)
     
     if used:
-        curr_y = render_section(virt_surface, f"Used Words ({len(used)})", used, header_font, curr_y, width - 20)
+        curr_y = render_section(virt_surface, f"USED WORDS ({len(used)})", used, header_font, curr_y, width - 20)
         
     if full:
-        curr_y = render_section(virt_surface, f"Other Words ({len(full)})", full, header_font, curr_y, width - 20)
+        curr_y = render_section(virt_surface, f"OTHER WORDS ({len(full)})", full, header_font, curr_y, width - 20)
 
-    # Draw visible part
     screen.blit(virt_surface, (x + 10, y + 10), (0, scroll_y, width - 20, height - 20))
-    
     return curr_y
-    # Border
-    pygame.draw.rect(screen, GRAY, (x, y, width, height), 1)
+
+def draw_help_overlay(screen, font, small_font):
+    # Dim the background
+    overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+    overlay.fill((255, 255, 255, 230))
+    screen.blit(overlay, (0, 0))
     
-    return total_height
+    box_w, box_h = 600, 420
+    box_rect = pygame.Rect((WIDTH - box_w) // 2, (HEIGHT - box_h) // 2, box_w, box_h)
+    pygame.draw.rect(screen, WHITE, box_rect)
+    pygame.draw.rect(screen, BLACK, box_rect, 2)
+    
+    title = font.render("HOW TO USE", True, BLACK)
+    screen.blit(title, (box_rect.centerx - title.get_width() // 2, box_rect.y + 30))
+    
+    instructions = [
+        "1. Click a hexagon and type a letter to fill it.",
+        "2. The center (Yellow) hexagon is the required letter.",
+        "3. Press Backspace to clear a letter.",
+        "4. Click 'SOLVE' to find all possible words.",
+        "5. Use your mouse wheel to scroll through the results.",
+        "6. Use 'UPDATE' buttons to download latest word lists.",
+        "7. 'RESET' clears the entire board.",
+        "8. Click anywhere to close this guide."
+    ]
+    
+    curr_y = box_rect.y + 100
+    for line in instructions:
+        txt = small_font.render(line, True, BLACK)
+        screen.blit(txt, (box_rect.x + 50, curr_y))
+        curr_y += 35
 
 def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Spelling Bee Solver")
     clock = pygame.time.Clock()
-    font = pygame.font.SysFont("Arial", 40, bold=True)
-    small_font = pygame.font.SysFont("Arial", 18)
-    button_font = pygame.font.SysFont("Arial", 20, bold=True)
+    
+    # Fonts
+    font = pygame.font.SysFont(MAIN_FONT, 40, bold=True)
+    small_font = pygame.font.SysFont(MAIN_FONT, 16)
+    button_font = pygame.font.SysFont(MAIN_FONT, 18, bold=True)
+    title_font = pygame.font.SysFont(MAIN_FONT, 38, bold=True)
 
     letters = [""] * 7
     selected_hex = 0
     results = None 
-    status_msg = "Enter puzzle letters. Center hexagon is required."
+    status_msg = "Enter puzzle letters. All hexagons are required."
     scroll_y = 0
     max_scroll = 0
+    show_help = False
 
-    cx, cy = 250, 300
-    # Spacing for flat-topped hexagons in a vertical arrangement
+    cx, cy = 250, 310
     h_dist = HEX_RADIUS * 1.5
     v_dist = HEX_RADIUS * math.sqrt(3) / 2
-    
-    # Add a small gap (5%)
     gap = 1.05
     h_dist *= gap
     v_dist *= gap
 
     hex_centers = [
-        (cx, cy), # Center
-        (cx, cy - v_dist * 2), # Top
-        (cx + h_dist, cy - v_dist), # Top Right
-        (cx + h_dist, cy + v_dist), # Bottom Right
-        (cx, cy + v_dist * 2), # Bottom
-        (cx - h_dist, cy + v_dist), # Bottom Left
-        (cx - h_dist, cy - v_dist)  # Top Left
+        (cx, cy), (cx, cy - v_dist * 2), (cx + h_dist, cy - v_dist),
+        (cx + h_dist, cy + v_dist), (cx, cy + v_dist * 2),
+        (cx - h_dist, cy + v_dist), (cx - h_dist, cy - v_dist)
     ]
 
     buttons = [
@@ -163,6 +185,7 @@ def main():
         Button(160, 520, 100, 40, "Solve", YELLOW, button_font),
         Button(500, 520, 180, 40, "Update Used", GRAY, button_font),
         Button(700, 520, 180, 40, "Update Full Dict", GRAY, button_font),
+        Button(WIDTH - 100, 20, 80, 35, "Help", GRAY, small_font),
     ]
 
     running = True
@@ -173,10 +196,15 @@ def main():
             
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos = event.pos
+                
+                if show_help:
+                    show_help = False
+                    continue
+
                 if event.button == 4: # Scroll Up
-                    scroll_y = max(0, scroll_y - 30)
+                    scroll_y = max(0, scroll_y - 40)
                 elif event.button == 5: # Scroll Down
-                    scroll_y = min(max_scroll, scroll_y + 30)
+                    scroll_y = min(max_scroll, scroll_y + 40)
                 
                 for i, center in enumerate(hex_centers):
                     if is_point_in_hexagon(pos, center, HEX_RADIUS):
@@ -193,31 +221,40 @@ def main():
                     else:
                         puzzle = letters[0].upper() + "".join(letters[1:]).lower()
                         status_msg = "Solving..."
-                        results = solve_puzzle(puzzle)
+                        solve_res = solve_puzzle(puzzle)
                         scroll_y = 0
-                        if results[0] is None:
-                            status_msg = results[3]
+                        if solve_res[0] is None:
+                            status_msg = solve_res[3]
                             results = None
                         else:
+                            results = solve_res
                             status_msg = f"Found {len(results[0]) + len(results[1]) + len(results[2])} words!"
                 elif buttons[2].is_clicked(pos):
-                    status_msg = "Updating Used Words... Please wait."
+                    status_msg = "Updating Used Words..."
                     screen.fill(WHITE)
-                    btn_surf = button_font.render(status_msg, True, BLACK)
-                    screen.blit(btn_surf, (50, 50))
+                    loading_surf = title_font.render("UPDATING...", True, BLACK)
+                    screen.blit(loading_surf, (WIDTH // 2 - loading_surf.get_width() // 2, HEIGHT // 2 - 50))
+                    msg_surf = small_font.render("Please wait, this may take a minute.", True, DARK_GRAY)
+                    screen.blit(msg_surf, (WIDTH // 2 - msg_surf.get_width() // 2, HEIGHT // 2 + 20))
                     pygame.display.flip()
+                    pygame.event.pump()
                     update_used_words()
                     status_msg = "Used words updated!"
                 elif buttons[3].is_clicked(pos):
                     status_msg = "Updating Full Dictionary..."
                     screen.fill(WHITE)
-                    btn_surf = button_font.render(status_msg, True, BLACK)
-                    screen.blit(btn_surf, (50, 50))
+                    loading_surf = title_font.render("UPDATING...", True, BLACK)
+                    screen.blit(loading_surf, (WIDTH // 2 - loading_surf.get_width() // 2, HEIGHT // 2 - 50))
+                    msg_surf = small_font.render("Downloading dictionary...", True, DARK_GRAY)
+                    screen.blit(msg_surf, (WIDTH // 2 - msg_surf.get_width() // 2, HEIGHT // 2 + 20))
                     pygame.display.flip()
+                    pygame.event.pump()
                     update_full_dictionary()
                     status_msg = "Full dictionary updated!"
+                elif buttons[4].is_clicked(pos):
+                    show_help = True
 
-            if event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN and not show_help:
                 if event.key == pygame.K_BACKSPACE:
                     letters[selected_hex] = ""
                 elif event.unicode.isalpha() and len(event.unicode) == 1:
@@ -229,6 +266,11 @@ def main():
                             break
 
         screen.fill(WHITE)
+        
+        # Draw Title
+        title_surf = title_font.render("SPELLING BEE SOLVER", True, BLACK)
+        screen.blit(title_surf, (cx - title_surf.get_width() // 2, 45))
+
         for i, center in enumerate(hex_centers):
             color = YELLOW if i == 0 else GRAY
             draw_hexagon(screen, center, HEX_RADIUS, color, letters[i], font, i == selected_hex)
@@ -245,7 +287,10 @@ def main():
             screen.blit(res_title, (510, 60))
 
         status_surf = small_font.render(status_msg, True, BLACK)
-        screen.blit(status_surf, (50, 480))
+        screen.blit(status_surf, (50, 485))
+
+        if show_help:
+            draw_help_overlay(screen, font, small_font)
 
         pygame.display.flip()
         clock.tick(60)
